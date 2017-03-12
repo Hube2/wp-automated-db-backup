@@ -57,36 +57,32 @@
 	$db = new bluntMysqli($host, $user, $pass, $name, $char);
 	
 	$tables = $db->getTables();
-	if (!in_array($prefix.'blogs', $tables)) {
-		// not multisite
-		exit;
-	}
-	
-	$query = 'SELECT blog_id FROM '.$prefix.'blogs ORDER BY blog_id';
-	$results = $db->get($query);
-	
 	$sites = array();
-	foreach ($results as $result) {
-		$sites[intval($result['blog_id'])] = array();
+	if (in_array($prefix.'blogs', $tables)) {
+		$query = 'SELECT blog_id FROM '.$prefix.'blogs ORDER BY blog_id';
+		$results = $db->get($query);
+		$sites = array();
+		foreach ($results as $result) {
+			$sites[intval($result['blog_id'])] = array();
+		}
 	}
 	
 	foreach ($tables as $index => $table) {
 		//preg_match('/^'.preg_quote($prefix).'([0-9]+)_/', $table, $matches);
 		//echo '<pre>'; print_r($matches); echo '</pre>';
 		if (preg_match('/^'.preg_quote($prefix).'([0-9]+)_/', $table, $matches)) {
-			$sites[intval($matches[1])][] = $table;
+			if (isset($sites[intval($matches[1])])) {
+				$sites[intval($matches[1])][] = $table;
+			}
 			unset($tables[$index]);
 		}
 	}
 	// whatever's left is site 1
+	// could be all tables if not multisite
 	$sites[1] = $tables;
 	
 	// make sure folder exists for dumps
-	$base = dirname(__FILE__).'/__db_dumps';
-	if (!is_dir($base)) {
-		mkdir($base);
-	}
-	$base .= '/sites';
+	$base = dirname(__FILE__).'/sites';
 	if (!is_dir($base)) {
 		mkdir($base);
 	}
@@ -94,7 +90,7 @@
 	// backups for each site
 	foreach ($sites as $site => $tables) {
 		$path = $base.'/'.$site;
-		// make sure the site folder exists
+		// make sure the site page exists
 		if (!is_dir($path)) {
 			mkdir($path);
 		}
