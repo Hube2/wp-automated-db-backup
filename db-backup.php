@@ -5,12 +5,22 @@
 			but WITHOUT ANY WARRANTY; without even the implied warranty of
 			MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 			GNU General Public License for more details.
+			
+			Version 2.0.0
 	*/
 	ini_set('display_errors', 1);
-	set_time_limit(0);
+	set_time_limit(60*30);
 	
-	date_default_timezone_set('America/Chicago');
-	$remove_date = strtotime('-30 days');
+	if (defined('TIMEZONE')) {
+		date_default_timezone_set(TIMEZONE);
+	} else {
+		date_default_timezone_set('America/Chicago');
+	}
+	if (defined('ARCHIVE_REMOVAL')) {
+		$remove_date = strtotime(ARCHIVE_REMOVAL);
+	} else {
+		$remove_date = strtotime('-30 days');
+	}
 
 	require(dirname(__FILE__).'/blunt.mysqli.class.php');
 	require(dirname(__FILE__).'/Mysqldump.php');
@@ -89,6 +99,11 @@
 	
 	// backups for each site
 	foreach ($sites as $site => $tables) {
+		if (
+			(defined('SITE_START') && SITE_START != 0 && $site < SITE_START) ||
+			(defined('SITE_END') && SITE_END != 0 && $site > SITE_END)) {
+			continue;
+		}
 		$path = $base.'/'.$site;
 		// make sure the site page exists
 		if (!is_dir($path)) {

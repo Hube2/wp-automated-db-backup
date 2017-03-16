@@ -12,6 +12,8 @@ folders. These files can can be kept for a specified amount of time and then aut
 deleted when then time expires. This script was originally buiilt to work with multisite 
 but has been modified to also deal with single site WP installations.
 
+This script has been modified so that it will also work on single site wp installations.
+
 ## Why do I use this?
 I need a simple, fullproof way to back up a database regularly. DB dumps for multisite 
 installations are generally too large to import again, and quite frankly, the available WP 
@@ -62,17 +64,31 @@ RewriteEngine Off
 Download this repo and extract the files into your new folder. These files should not be in a sub-folder.
 
 ##### 4) Settings
-Open the file db-backup.php and edit the settings at the top of the file to specify your time 
+Open the file db-backup-part-1.php and edit the settings at the top of the file to specify your time 
 zone and the amount of time that you want to keep the backup files. The servers where I host 
 my sites require that I set the default time zone before I use any date functions. Your server 
 may have other requirements and they should be set up here as well.
 ```
-date_default_timezone_set('America/Chicago');
-$remove_date = strtotime('-30 days');
+define('TIMEZONE', 'America/Chicago'); // used when calling date_default_timezone_set()
+define('ARCHIVE_REMOVAL', '-30 days'); // backups before this time are deleted
 ```
-the value for `$remove_date` will be automatically calculated base on the current date - (minus) 
+the value for `ARCHIVE_REMOVAL` will be automatically calculated base on the current date - (minus) 
 whatever value you set here. For example, if you wanted to keep the backup files for a year then 
 you could set it to `'-1 Year'`
+
+**Extremely Large Multisite Networks**
+
+The time limit set for the running of this script is 30 minutes. This happens to be the maximum time
+limit on all crons run on my current hosting environment. If you are running an extremely large multisite
+environment and you're hosting provider or your server sets a maximum time for crons then you can
+split up your crons into multiple instances. Create a copy of db-backup-part-1 for each section 
+that you want to backup and set these contants:
+```
+define('SITE_START', 0); // first site to backup
+define('SITE_END', 0);  // last site to backup
+```
+A value of 0 for SITE_START indicates all sites <= SITE_END
+A value of 0 for SITE_END indicates all sites >= SITE_START
 
 ##### 5) Write Permissions
 Make sure that PHP has permission to write to the folder on the server. If PHP cannot write to the 
@@ -80,8 +96,8 @@ folder then the script will fail. This may require differnet things for differne
 I'll assume that you know how to do this for your hosting environment and will not go into all the possbilities.
 
 ##### 6) Set up the cron
-Set up a cron that points to the PHP script (db-backup.php). This cannot a web URL:
-1. we have made the url not accessible form the web (I hope)
+Set up a cron that points to the PHP script (db-backup-part-1.php, or if running multiple crons for extremely large multisite environments that then the file name of your script). This cannot a web URL:
+1. we have made the url not accessible form the web (I hope, see security)
 2. the script would likely time out anyway if you do try to run it from a browser or accessing it via URL
 
 Again, the details of setting up a cron on your particular hosting environment are left up to you. 
