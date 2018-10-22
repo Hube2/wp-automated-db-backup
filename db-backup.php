@@ -131,7 +131,7 @@
 		$dump->start($file);
 	} // end foreach $site
 	
-	if (defined('BACKUP_RUN_NAME')) {
+	if (defined('BACKUP_COMPLETION_MESSAGE')) {
 		echo BACKUP_COMPLETION_MESSAGE;
 	}
 	
